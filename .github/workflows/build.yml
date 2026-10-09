@@ -25,6 +25,12 @@ jobs:
         arduino-cli core update-index
         arduino-cli core install esp32:esp32@3.0.7
         
+    - name: Install required libraries
+      run: |
+        arduino-cli lib update-index
+        arduino-cli lib install CAN
+        arduino-cli lib install can_common
+        
     - name: Rename sketch to match folder name
       run: |
         mv ./firmware/esp32_tx_verify.ino ./firmware/firmware.ino
