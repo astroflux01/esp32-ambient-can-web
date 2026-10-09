@@ -29,7 +29,10 @@ jobs:
       run: |
         arduino-cli lib update-index
         arduino-cli lib install CAN
-        arduino-cli lib install can_common
+        # can_common 不在官方索引中，需从 GitHub 克隆安装
+        arduino-cli lib install --git-url https://github.com/collin80/can_common
+        # 顺便安装 esp32_can 库以备不时之需
+        arduino-cli lib install --git-url https://github.com/collin80/esp32_can
         
     - name: Rename sketch to match folder name
       run: |
