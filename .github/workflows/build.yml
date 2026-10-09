@@ -25,9 +25,13 @@ jobs:
         arduino-cli core update-index
         arduino-cli core install esp32:esp32@3.0.7
         
+    - name: Rename sketch to match folder name
+      run: |
+        mv ./firmware/esp32_tx_verify.ino ./firmware/firmware.ino
+        
     - name: Build sketch
       run: |
-        arduino-cli compile --verbose --fqbn esp32:esp32:esp32 ./firmware --output-dir ./firmware/build
+        arduino-cli compile --verbose --fqbn esp32:esp32:esp32 ./firmware/firmware.ino --output-dir ./firmware/build
         
     - name: Upload firmware artifact
       uses: actions/upload-artifact@v4
