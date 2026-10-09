@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ESP32 Ambient CAN</title>
+  <style>
+    body { font-family: sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h1 { text-align: center; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+    .card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
+    .card h3 { margin: 0 0 10px; font-size: 16px; }
+    .card input { width: 100%; margin-bottom: 8px; padding: 5px; box-sizing: border-box; }
+    .card button { width: 100%; padding: 8px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    .log { margin-top: 20px; background: #222; color: #0f0; padding: 15px; height: 200px; overflow-y: auto; font-family: monospace; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ESP32 环境数据模拟器</h1>
+    <div class="grid" id="grid"></div>
+    <div class="log" id="log"></div>
+  </div>
+<script>
+const settings = [
+  {id: 1, name: "温度", type: "TEMP", value: "25.5"},
+  {id: 2, name: "湿度", type: "HUM", value: "60"},
+  {id: 3, name: "气压", type: "PRESS", value: "1013"},
+  {id: 4, name: "光照", type: "LUX", value: "500"},
+  {id: 5, name: "CO2", type: "CO2", value: "400"},
+  {id: 6, name: "TVOC", type: "TVOC", value: "50"},
+  {id: 7, name: "PM2.5", type: "PM25", value: "10"},
+  {id: 8, name: "PM10", type: "PM10", value: "20"},
+  {id: 9, name: "风速", type: "WIND_S", value: "5"},
+  {id: 10, name: "风向", type: "WIND_D", value: "北"},
+  {id: 11, name: "雨量", type: "RAIN", value: "0"},
+  {id: 12, name: "雪量", type: "SNOW", value: "0"},
+  {id: 13, name: "紫外线", type: "UV", value: "3"},
+  {id: 14, name: "噪音", type: "NOISE", value: "40"},
+  {id: 15, name: "电压", type: "VOLT", value: "12.0"},
+  {id: 16, name: "电流", type: "CURR", value: "1.5"},
+  {id: 17, name: "功率", type: "PWR", value: "18"},
+  {id: 18, name: "频率", type: "FREQ", value: "50"},
+  {id: 19, name: "门磁", type: "DOOR", value: "关"},
+  {id: 20, name: "人体", type: "PIR", value: "无"},
+  {id: 21, name: "烟雾", type: "SMOKE", value: "0"},
+  {id: 22, name: "燃气", type: "GAS", value: "0"},
+  {id: 23, name: "水浸", type: "WATER", value: "无"},
+  {id: 24, name: "震动", type: "SHOCK", value: "无"},
+  {id: 25, name: "GPS经度", type: "GPS_LON", value: "116.40"},
+  {id: 26, name: "GPS纬度", type: "GPS_LAT", value: "39.90"},
+  {id: 27, name: "GPS海拔", type: "GPS_ALT", value: "50"},
+  {id: 28, name: "GPS速度", type: "GPS_SPD", value: "0"}
+];
+
+function init() {
+  const grid = document.getElementById('grid');
+  settings.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <h3>${item.name}</h3>
+      <input id="val_${item.id}" value="${item.value}" placeholder="数值">
+      <input id="extra_${item.id}" value="" placeholder="附加信息">
+      <button onclick="send(${item.id})">发送</button>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function log(msg) {
+  const logEl = document.getElementById('log');
+  logEl.innerHTML += msg + '<br>';
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function send(id) {
+  const item = settings.find(s => s.id === id);
+  const val = document.getElementById(`val_${id}`).value;
+  const extra = document.getElementById(`extra_${id}`).value;
+  
+  const payload = { id: id, name: item.name, type: item.type, value: val, extra: extra, ts: Date.now() };
+  log(`发送: ${item.name} → ${val}`);
+  
+  fetch('/api/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(d => {
+    if(d.ok) log(`✅ ESP32已通过TX发出: ${d.sent}`);
+    else log(`❌ 发送失败`);
+  })
+  .catch(e => log(`❌ 错误: ${e}`));
+}
+
+init();
+</script>
+</body>
+</html>
