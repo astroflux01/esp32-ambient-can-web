@@ -1,36 +1,34 @@
 name: Build ESP32 Firmware
+
 on:
   push:
-    branches: [main]
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Arduino CLI
+      uses: arduino/setup-arduino-cli@v1
       
-      - name: Setup Arduino CLI
-        uses: arduino/setup-arduino-cli@v1
-        with:
-          version: "0.35.0"
-      
-      - name: Install ESP32 core and libraries
-        run: |
-          arduino-cli config add board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-          arduino-cli core update-index
-          arduino-cli core install esp32:esp32
-          arduino-cli lib install "ESP Async WebServer" "AsyncTCP" "ArduinoJson" "LittleFS"
-      
-      - name: Compile firmware
-        run: |
-          arduino-cli compile --fqbn esp32:esp32:esp32 --output-dir $GITHUB_WORKSPACE/build firmware/esp32_tx_verify.ino
-      
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: esp32-firmware
-          path: |
-            build/*.ino.bin
-            build/*.partitions.bin
-            build/*bootloader*.bin
+    - name: Install ESP32 core
+      run: |
+        arduino-cli core update-index
+        arduino-cli core install esp32:esp32@3.0.7
+        
+    - name: Build sketch
+      run: |
+        arduino-cli compile --fqbn esp32:esp32:esp32 ./firmware/esp32_tx_verify.ino --output-dir ./firmware/build
+        
+    - name: Upload firmware artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: esp32-firmware
+        path: ./firmware/build/*.bin
