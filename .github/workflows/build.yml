@@ -10,7 +10,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+    # 全局注入环境变量，开启不安全安装许可
+    env:
+      ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL: true
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -25,13 +28,17 @@ jobs:
         arduino-cli core update-index
         arduino-cli core install esp32:esp32@3.0.7
         
+    - name: Configure Arduino CLI for external libraries
+      run: |
+        arduino-cli config init --overwrite
+        arduino-cli config set library.enable_unsafe_install true
+        
     - name: Install required libraries
       run: |
         arduino-cli lib update-index
         arduino-cli lib install CAN
-        # can_common 不在官方索引中，需从 GitHub 克隆安装
+        # 从 GitHub 克隆安装不在官方索引中的依赖库
         arduino-cli lib install --git-url https://github.com/collin80/can_common
-        # 顺便安装 esp32_can 库以备不时之需
         arduino-cli lib install --git-url https://github.com/collin80/esp32_can
         
     - name: Rename sketch to match folder name
