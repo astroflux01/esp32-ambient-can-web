@@ -27,7 +27,7 @@ jobs:
         
     - name: Build sketch
       run: |
-        arduino-cli compile --verbose --fqbn esp32:esp32:esp32 ./firmware/esp32_tx_verify.ino --output-dir ./firmware/build
+        arduino-cli compile --verbose --fqbn esp32:esp32:esp32 ./firmware --output-dir ./firmware/build
         
     - name: Upload firmware artifact
       uses: actions/upload-artifact@v4
