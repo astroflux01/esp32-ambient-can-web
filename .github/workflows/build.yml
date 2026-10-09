@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # 全局注入环境变量，开启不安全安装许可
+    # 开启不安全安装许可（用于从Git安装库）
     env:
       ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL: true
 
@@ -26,7 +26,8 @@ jobs:
     - name: Install ESP32 core
       run: |
         arduino-cli core update-index
-        arduino-cli core install esp32:esp32@3.0.7
+        # 降级到 2.0.17 以兼容旧的 CAN 库（3.x 版本移除了 esp_intr.h）
+        arduino-cli core install esp32:esp32@2.0.17
         
     - name: Configure Arduino CLI for external libraries
       run: |
