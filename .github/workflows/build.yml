@@ -3,54 +3,35 @@ name: Build ESP32 Firmware
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    # 开启不安全安装许可（用于从Git安装库）
-    env:
-      ARDUINO_LIBRARY_ENABLE_UNSAFE_INSTALL: true
 
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v4
 
     - name: Setup Arduino CLI
       uses: arduino/setup-arduino-cli@v2
       with:
         version: "0.35.3"
-        
+
     - name: Install ESP32 core
       run: |
         arduino-cli core update-index
-        # 降级到 2.0.17 以兼容旧的 CAN 库（3.x 版本移除了 esp_intr.h）
         arduino-cli core install esp32:esp32@2.0.17
-        
-    - name: Configure Arduino CLI for external libraries
-      run: |
-        arduino-cli config init --overwrite
-        arduino-cli config set library.enable_unsafe_install true
-        
-    - name: Install required libraries
-      run: |
-        arduino-cli lib update-index
-        arduino-cli lib install CAN
-        # 从 GitHub 克隆安装不在官方索引中的依赖库
-        arduino-cli lib install --git-url https://github.com/collin80/can_common
-        arduino-cli lib install --git-url https://github.com/collin80/esp32_can
-        
-    - name: Rename sketch to match folder name
+
+    - name: Rename sketch
       run: |
         mv ./firmware/esp32_tx_verify.ino ./firmware/firmware.ino
-        
-    - name: Build sketch
+
+    - name: Build
       run: |
-        arduino-cli compile --verbose --fqbn esp32:esp32:esp32 ./firmware/firmware.ino --output-dir ./firmware/build
-        
-    - name: Upload firmware artifact
+        arduino-cli compile --fqbn esp32:esp32:esp32 ./firmware/firmware.ino --output-dir ./firmware/build
+
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: esp32-firmware
